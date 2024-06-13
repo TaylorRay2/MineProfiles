@@ -1,8 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/services.dart';
+import 'localizer.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
@@ -12,14 +11,23 @@ class LoginPage extends StatelessWidget {
 
   Future<void> _signIn(BuildContext context) async {
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: txtEmail.text,
-        password: txtPassword.text,
-      );
-      Navigator.of(context).pushReplacementNamed('/list');
+      if (((txtPassword.text).length > 0) && ((txtEmail.text).length > 0)) {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: txtEmail.text,
+          password: txtPassword.text,
+        );
+        Navigator.of(context).pushReplacementNamed('/list');
+      } else if ((txtEmail.text).length > 0) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Digite uma senha')));
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Preencha os campos')));
+      }
     } on FirebaseAuthException catch (e) {
+      String message = localizeError(e.code);
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message!)));
+          .showSnackBar(SnackBar(content: Text(message!)));
     }
   }
 
@@ -63,7 +71,8 @@ class LoginPage extends StatelessWidget {
                         controller: txtEmail,
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
-                          hintText: "E-mail",
+                          label: Text('E-mail'),
+                          hintText: "exemplo@outlook.com",
                           border: const OutlineInputBorder(),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(
@@ -76,12 +85,18 @@ class LoginPage extends StatelessWidget {
                       TextField(
                         controller: txtPassword,
                         keyboardType: TextInputType.visiblePassword,
+                        maxLength: 32,
+                        maxLengthEnforcement: MaxLengthEnforcement.enforced,
                         obscureText: true,
                         autocorrect: false,
                         enableSuggestions: false,
                         decoration: InputDecoration(
-                          hintText: "Password",
+                          label: Text('Senha'),
+                          hintText: "caracteres: min 6",
                           border: const OutlineInputBorder(),
+                          errorBorder: OutlineInputBorder(
+                              borderSide:
+                                  BorderSide(color: Colors.red.shade300)),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(
                               color: Colors.green.shade300.withOpacity(0.25),
@@ -107,7 +122,7 @@ class LoginPage extends StatelessWidget {
                           ),
                           onPressed: () => _signIn(context),
                           child: Text(
-                            'Sign In',
+                            'Entrar',
                             style: TextStyle(
                               color: Colors.white.withOpacity(1),
                             ),
@@ -121,7 +136,7 @@ class LoginPage extends StatelessWidget {
                             Navigator.of(context).pushNamed("/register");
                           },
                           child: Text(
-                            "Don't have an Account? Sign up",
+                            "Não tem uma conta? Crie uma",
                             style: TextStyle(
                                 fontSize: 12, color: Colors.green.shade800),
                           ),

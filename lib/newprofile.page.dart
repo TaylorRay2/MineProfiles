@@ -22,31 +22,54 @@ class _MyWidgetState extends State<NewProfilePage> {
   Future<void> addProfile(BuildContext context) async {
     try {
       Map<String, dynamic> userProfile = new Map<String, dynamic>();
-      userProfile["profileName"] = txtName.text;
-      var playersArray = txtPlayers.text.split(',');
-      for (var i = 0; i < playersArray.length; i++) {
-        playersArray[i].trim();
-        if ((playersArray[i] == '') || (playersArray[i] == ' ')) {
-          playersArray.removeAt(i);
-          playersArray[i] = playersArray[i].trim();
+      var playersArray = [];
+      var adminsArray = [];
+      if (((txtName.text).length > 0) &&
+          ((txtPlayers.text).length > 0) &&
+          ((txtAdmin.text).length > 0)) {
+        userProfile["profileID"] = UniqueKey();
+        userProfile["profileName"] = txtName.text;
+
+        if ((txtPlayers.text).contains(',')) {
+          var playersArray = txtPlayers.text.split(',');
+          for (var i = 0; i < playersArray.length; i++) {
+            playersArray[i].trim();
+            if ((playersArray[i] == '') || (playersArray[i] == ' ')) {
+              playersArray.removeAt(i);
+              playersArray[i] = playersArray[i].trim();
+            } else {
+              playersArray[i] = playersArray[i].trim();
+            }
+          }
+          userProfile["players"] = playersArray;
         } else {
-          playersArray[i] = playersArray[i].trim();
+          playersArray = [txtPlayers.text];
+          userProfile["players"] = playersArray;
         }
-      }
-      userProfile["players"] = playersArray;
-      // print(userProfile["players"]);
-      var adminsArray = txtAdmin.text.split(',');
-      for (var ii = 0; ii < adminsArray.length; ii++) {
-        adminsArray[ii].trim();
-        if ((adminsArray[ii] == '') || (adminsArray[ii] == ' ')) {
-          adminsArray.removeAt(ii);
-          adminsArray[ii] = adminsArray[ii].trim();
+
+        if ((txtAdmin.text).contains(',')) {
+          adminsArray = txtAdmin.text.split(',');
+          for (var ii = 0; ii < adminsArray.length; ii++) {
+            adminsArray[ii].trim();
+            if ((adminsArray[ii] == '') || (adminsArray[ii] == ' ')) {
+              adminsArray.removeAt(ii);
+              adminsArray[ii] = adminsArray[ii].trim();
+            } else {
+              adminsArray[ii] = adminsArray[ii].trim();
+            }
+          }
         } else {
-          adminsArray[ii] = adminsArray[ii].trim();
+          adminsArray = [txtAdmin.text];
+          userProfile["admin"] = adminsArray;
         }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Um ou mais campos estão vazios')));
       }
-      userProfile["admin"] = adminsArray;
-      // print(userProfile["admin"]);
+      await FirebaseFirestore.instance
+          .collection('user_profile')
+          .add(userProfile);
+      Navigator.of(context).maybePop();
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(e.message!)));
