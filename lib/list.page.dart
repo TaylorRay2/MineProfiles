@@ -88,7 +88,7 @@ class _ListPageState extends State<ListPage> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => ProfilePage(
-                                    profID: doc['profileID'],
+                                    document: doc,
                                   ),
                                 ),
                               );
