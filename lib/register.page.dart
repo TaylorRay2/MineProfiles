@@ -1,45 +1,69 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'localizer.dart';
 
 class RegisterPage extends StatefulWidget {
-  RegisterPage({super.key});
+  const RegisterPage({super.key});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  bool _visible = false;
+  bool _visibleP = false;
+  bool _visibleC = false;
 
   final txtName = TextEditingController();
   final txtEmail = TextEditingController();
   final txtPassword = TextEditingController();
+  final txtConfirm = TextEditingController();
 
-  void _toggleVisibility() {
+  void _toggleVisibilityP() {
     setState(() {
-      _visible = !_visible;
+      _visibleP = !_visibleP;
+    });
+  }
+
+  void _toggleVisibilityC() {
+    setState(() {
+      _visibleC = !_visibleC;
     });
   }
 
   Future<void> register(BuildContext context) async {
     try {
-      var credential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: txtEmail.text,
-        password: txtPassword.text,
-      );
-      await credential.user!.updateDisplayName(txtName.text);
-      await FirebaseAuth.instance.signOut();
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      if (txtPassword.text == txtConfirm.text) {
+        var credential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: txtEmail.text.trim(),
+          password: txtPassword.text.trim(),
+        );
+        await credential.user!.updateDisplayName(txtName.text);
+        await FirebaseAuth.instance.signOut();
+        // ignore: use_build_context_synchronously
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil('/login', (route) => false);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text('O conteúdo da senha não é o mesmo que o da confirmação'),
+          ),
+        );
+      }
     } on FirebaseAuthException catch (e) {
+      String message = localizeError(e.code);
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message!)));
+          .showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         // backgroundColor: Colors.cyan[300],
         // shadowColor: Colors.grey,
@@ -56,10 +80,10 @@ class _RegisterPageState extends State<RegisterPage> {
               decoration: const BoxDecoration(
                   color: Colors.brown,
                   borderRadius: BorderRadius.all(Radius.circular(20))),
-              height: MediaQuery.of(context).size.height - 56,
+              height: MediaQuery.of(context).size.height - 100,
               child: Container(
                 // height: MediaQuery.of(context).size.height,
-                height: MediaQuery.of(context).size.height - 56,
+                height: MediaQuery.of(context).size.height - 100,
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.all(
@@ -78,7 +102,8 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: txtName,
                             keyboardType: TextInputType.name,
                             decoration: const InputDecoration(
-                              hintText: "Name",
+                              label: const Text('Nome'),
+                              hintText: "Digite seu nome",
                               border: null,
                               // OutlineInputBorder(),
                               // focusedBorder:
@@ -97,7 +122,8 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: txtEmail,
                             keyboardType: TextInputType.emailAddress,
                             decoration: const InputDecoration(
-                              hintText: "E-mail",
+                              label: const Text('E-mail'),
+                              hintText: "Digite seu e-mail",
                               border: null,
                               // OutlineInputBorder(),
                               // focusedBorder:
@@ -115,16 +141,49 @@ class _RegisterPageState extends State<RegisterPage> {
                           child: TextField(
                             controller: txtPassword,
                             keyboardType: TextInputType.visiblePassword,
-                            obscureText: !_visible,
+                            maxLength: 32,
+                            maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                            obscureText: !_visibleP,
                             autocorrect: false,
                             enableSuggestions: false,
                             decoration: InputDecoration(
                               suffixIcon: IconButton(
-                                  onPressed: _toggleVisibility,
-                                  icon: _visible
-                                      ? Icon(Icons.visibility_off)
-                                      : Icon(Icons.visibility)),
-                              hintText: "Password",
+                                  onPressed: _toggleVisibilityP,
+                                  icon: _visibleP
+                                      ? const Icon(Icons.visibility_off)
+                                      : const Icon(Icons.visibility)),
+                              label: const Text('Senha'),
+                              hintText: "Digite sua senha",
+                              border: null,
+                              // OutlineInputBorder(),
+                              // focusedBorder:
+                              // OutlineInputBorder(
+                              //   borderSide: BorderSide(
+                              //     color: Colors.green.shade300.withOpacity(0.25),
+                              //     width: 2.0,
+                              //   ),
+                              // ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: TextField(
+                            controller: txtConfirm,
+                            keyboardType: TextInputType.visiblePassword,
+                            maxLength: 32,
+                            maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                            obscureText: !_visibleC,
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            decoration: InputDecoration(
+                              suffixIcon: IconButton(
+                                  onPressed: _toggleVisibilityC,
+                                  icon: _visibleC
+                                      ? const Icon(Icons.visibility_off)
+                                      : const Icon(Icons.visibility)),
+                              label: const Text('Confirme sua senha'),
+                              hintText: "Digite novamente a sua senha",
                               border: null,
                               // OutlineInputBorder(),
                               // focusedBorder:

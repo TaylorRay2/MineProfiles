@@ -1,6 +1,9 @@
+// import 'dart:html';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mineprofiles/profile.page.dart';
 
 class Profile {
   String profile;
@@ -8,9 +11,14 @@ class Profile {
   Profile(this.profile);
 }
 
-class ListPage extends StatelessWidget {
-  ListPage({super.key});
+class ListPage extends StatefulWidget {
+  const ListPage({super.key});
 
+  @override
+  State<ListPage> createState() => _ListPageState();
+}
+
+class _ListPageState extends State<ListPage> {
   void _logout(BuildContext context) {
     FirebaseAuth.instance.signOut();
     Navigator.of(context).pushReplacementNamed("/login");
@@ -29,7 +37,7 @@ class ListPage extends StatelessWidget {
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: Colors.green[600],
-        title: Text("${user.displayName}'s Profiles"),
+        title: Text("Perfis de ${user.displayName}"),
         titleTextStyle: const TextStyle(
             color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
         centerTitle: true,
@@ -67,15 +75,26 @@ class ListPage extends StatelessWidget {
                         ),
                         onDismissed: (_) {
                           doc.reference.delete();
+                          setState(() {});
                         },
                         child: ListTile(
-                          title: Text(doc['profileName']),
-                          subtitle: Text(((doc['players']).length).toString() +
-                              ' Players'),
-                          // Text((doc['players'].toString())
-                          // .replaceAll(RegExp(r'\[|\]'), '')),
-                          onTap: () => _openProfile(context, doc.reference.id),
-                        ),
+                            title: Text(doc['profileName']),
+                            subtitle: Text(
+                                '${((doc['players']).length)} Players, ${(doc['admin']).length} administradores'),
+                            // Text((doc['players'].toString())
+                            // .replaceAll(RegExp(r'\[|\]'), '')),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProfilePage(
+                                    profID: doc['profileID'],
+                                  ),
+                                ),
+                              );
+                            }
+                            // {_openProfile(context, doc.reference.id)},
+                            ),
                       ),
                     )
                     .toList());

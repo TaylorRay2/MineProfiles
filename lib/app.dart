@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+// import 'package:flutter/services.dart';
 import 'login.page.dart';
 import 'register.page.dart';
 import 'list.page.dart';
@@ -17,7 +17,6 @@ class App extends StatelessWidget {
         "/login": (context) => LoginPage(),
         "/register": (context) => RegisterPage(),
         "/list": (context) => ListPage(),
-        "/profile": (context) => ProfilePage(),
         "/newprofile": (context) => NewProfilePage(),
       },
       initialRoute: '/login',

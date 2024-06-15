@@ -14,9 +14,34 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  String pName = '';
+  Future<void> getName() async {
+    Stream snap = await firestore
+        .collection('user_profile')
+        .doc(widget.profID)
+        .get(GetOptions(source: Source.server))
+        .asStream();
+    snap.map((event) => null);
+  }
+
   testdoc(var i) {
-    print(i.length);
-    return 1;
+    print(i);
+    print(
+        firestore.collection('user_profiles').doc(i).get().then((value) async {
+      await value.data()?['profileName'];
+    }));
+    return 'test';
+  }
+
+  playerStatus(player, List admin) {
+    var status;
+    if (admin.contains(player)) {
+      status = 'Administrador';
+    } else {
+      status = 'Player';
+    }
+
+    return status;
   }
 
   void _logout(BuildContext context) {
@@ -26,15 +51,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
   final user = FirebaseAuth.instance.currentUser!;
   final firestore = FirebaseFirestore.instance;
-  playerStatus(String player, String admin) {
-    String value;
-    if (player == admin) {
-      value = 'Administrador';
-    } else {
-      value = 'Player';
-    }
-    return value;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,15 +59,29 @@ class _ProfilePageState extends State<ProfilePage> {
         .doc(widget.profID)
         .collection('players')
         .snapshots();
-    var snap = firestore
+    var admins = firestore
         .collection('user_profile')
-        .where('users', arrayContains: user.uid)
-        .where('profileID', isEqualTo: widget.profID)
+        .doc(widget.profID)
+        .collection('admin')
         .snapshots();
+    var snap = firestore
+        .collection('user_profiles')
+        .doc(widget.profID)
+        .get()
+        .asStream()
+        .first
+        .toString();
+    //     .then((value) {
+    //   var v = value.data();
+
+    //   pName = v?['profileName'];
+    //   print(v?['profileName']);
+    // });
+
     return Scaffold(
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.black),
-        title: Text(''),
+        title: Text(pName),
         titleTextStyle: const TextStyle(
             color: Colors.black, fontSize: 20, fontWeight: FontWeight.w600),
         centerTitle: true,
@@ -73,36 +103,12 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: snap,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const CircularProgressIndicator();
-            }
-
-            dynamic docs = snapshot.data?.docs;
-
-            return Column(
-                children: docs
-                    .map<Widget>(
-                      (doc) => Column(
-                        children: [
-                          Text(doc['profileName']),
-                          ListView.builder(
-                              itemCount: testdoc(doc['players']),
-                              itemBuilder: (context, index) {
-                                return ListTile(
-                                  title: Text(doc['players'][index]),
-                                );
-                              }),
-                        ],
-                      ),
-                    )
-                    .toList());
-          }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.of(context).pushNamed("/newtask"),
-        child: const Icon(Icons.add),
+      body: Center(
+        child: Column(
+          children: [
+            Text(testdoc(widget.profID)),
+          ],
+        ),
       ),
     );
   }
